@@ -511,15 +511,14 @@ remove_deps() {
 	# check for packages removed during dependency install (e.g. due to conflicts)
 	# removing all installed packages is risky in this case
 	if [[ -n $(grep -xvFf <(printf '%s\n' "${current_packagelist[@]}") \
-			<(printf '%s\n' "${original_packagelist[@]}") || true) ]]; then
+			<(printf '%s\n' "${original_packagelist[@]}") ) ]]; then
 		warning "$(gettext "Failed to remove installed dependencies.")"
 		return 0
 	fi
 
 	local deplist
-	deplist=($(grep -xvFf <(printf "%s\n" "${original_pkglist[@]}") \
-			<(printf "%s\n" "${current_pkglist[@]}") || true))
-	if [[ -z deplist ]]; then
+	if ! deplist=($(grep -xvFf <(printf "%s\n" "${original_pkglist[@]}") \
+			<(printf "%s\n" "${current_pkglist[@]}"))); then
 		return
 	fi
 
