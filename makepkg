@@ -1,0 +1,24 @@
+#! /bin/sh -eu
+
+# Get the directory containing a file
+realdir() {
+    local file="$1"
+    while test -L "$file"; do
+        local target
+        target="$(readlink -- "$file")"
+        case "$target" in
+        /*)
+            file="$target";;
+        *)
+            file="$(dirname -- "$file")/$target";;
+        esac
+    done
+    dirname -- "$file"
+}
+
+DIR="$(realdir "$0")"
+
+confdir=/etc \
+BUILDSCRIPT=PKGBUILD \
+DUPATH=du DUFLAGS="-sk --apparent-size" \
+exec "$DIR/scripts/makepkg.sh.in" "$@"

@@ -40,8 +40,11 @@ export COMMAND_MODE='legacy'
 unset CDPATH
 
 declare -r makepkg_version='@PACKAGE_VERSION@'
-declare -r confdir='@sysconfdir@'
-declare -r BUILDSCRIPT='@BUILDSCRIPT@'
+
+: "${confdir='@sysconfdir@'}"
+: "${BUILDSCRIPT='@BUILDSCRIPT@'}"
+declare -r confdir BUILDSCRIPT
+
 declare -r startdir="$PWD"
 
 packaging_options=('strip' 'docs' 'libtool' 'emptydirs' 'zipman' 'purge' 'upx' \
@@ -1706,7 +1709,7 @@ write_pkginfo() {
 		local packager="Unknown Packager"
 	fi
 
-	local size="$(@DUPATH@ @DUFLAGS@)"
+	local size="$(${DUPATH-@DUPATH@} ${DUFLAGS-@DUFLAGS@})"
 	size="$(( ${size%%[^0-9]*} * 1024 ))"
 
 	msg2 "$(gettext "Generating %s file...")" ".PKGINFO"
@@ -2387,7 +2390,7 @@ dir_is_empty() {
 	)
 }
 
-m4_include(library/parseopts.sh)
+. "$(dirname -- "$0")/library/parseopts.sh"
 
 usage() {
 	printf "makepkg (pacman) %s\n" "$makepkg_version"
