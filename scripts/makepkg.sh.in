@@ -895,7 +895,7 @@ check_deps() {
 	pmout=$(run_pacman -T "$@")
 	ret=$?
 
-	if (( ret == 127 )); then #unresolved deps
+	if test "$ret" -eq 127 -a -n "$pmout"; then #unresolved deps
 		printf "%s\n" "$pmout"
 	elif (( ret )); then
 		error "$(gettext "'%s' returned a fatal error (%i): %s")" "$PACMAN" "$ret" "$pmout"
