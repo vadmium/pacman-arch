@@ -2728,7 +2728,12 @@ if (( NODEPS || (NOBUILD && !DEP_BIN ) )); then
 	if (( NODEPS )); then
 		warning "$(gettext "Skipping dependency checks.")"
 	fi
-elif type -p "$PACMAN" >/dev/null; then
+elif output="$(command -v "$PACMAN")"; then
+	# Save full path in case the --syncdeps operation resets the $PATH by
+	# invoking /etc/profile. If $PACMAN refers to a command in ~/bin/ it
+	# could become inaccessible.
+	PACMAN="$output"
+	
 	if (( RMDEPS && ! INSTALL )); then
 		original_pkglist=($(run_pacman -Qq))    # required by remove_dep
 	fi
