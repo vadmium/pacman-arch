@@ -873,9 +873,9 @@ source_has_signatures() {
 run_pacman() {
 	local cmd
 	if [[ ! $1 = -@(T|Qq) ]]; then
-		cmd=($PACMAN $PACMAN_OPTS "$@")
+		cmd=("${PACMAN[@]}" $PACMAN_OPTS "$@")
 	else
-		cmd=($PACMAN "$@")
+		cmd=("${PACMAN[@]}" "$@")
 	fi
 	if (( ! ASROOT )) && [[ ! $1 = -@(T|Qq) ]]; then
 		if type -p sudo >/dev/null; then
@@ -898,7 +898,7 @@ check_deps() {
 	if (( ret == 127 )); then #unresolved deps
 		printf "%s\n" "$pmout"
 	elif (( ret )); then
-		error "$(gettext "'%s' returned a fatal error (%i): %s")" "$PACMAN" "$ret" "$pmout"
+		error "$(gettext "'%s' returned a fatal error (%i): %s")" "${PACMAN[*]}" "$ret" "$pmout"
 		return "$ret"
 	fi
 }
@@ -920,7 +920,7 @@ handle_deps() {
 		msg "$(gettext "Installing missing dependencies...")"
 
 		if ! run_pacman -S --asdeps $deplist; then
-			error "$(gettext "'%s' failed to install missing dependencies.")" "$PACMAN"
+			error "$(gettext "'%s' failed to install missing dependencies.")" "${PACMAN[*]}"
 			exit 1 # TODO: error code
 		fi
 	fi
@@ -1899,9 +1899,9 @@ install_package() {
 	(( ! INSTALL )) && return
 
 	if (( ! SPLITPKG )); then
-		msg "$(gettext "Installing package %s with %s...")" "$pkgname" "$PACMAN -U"
+		msg "$(gettext "Installing package %s with %s...")" "$pkgname" "${PACMAN[*]} -U"
 	else
-		msg "$(gettext "Installing %s package group with %s...")" "$pkgbase" "$PACMAN -U"
+		msg "$(gettext "Installing %s package group with %s...")" "$pkgbase" "${PACMAN[*]} -U"
 	fi
 
 	local fullver pkgarch pkg pkglist
@@ -2457,8 +2457,9 @@ if [[ $MAKEPKG_CONF = "$confdir/makepkg.conf" && -r ~/.makepkg.conf ]]; then
 	source_safe ~/.makepkg.conf
 fi
 
-# set pacman command if not already defined
-PACMAN=${PACMAN:-pacman}
+# Set pacman command if not already defined. Convert to Bash array so that
+# spaces can be included in the path while any arguments are retained.
+PACMAN=(${PACMAN:-pacman})
 
 # check if messages are to be printed using color
 unset ALL_OFF BOLD BLUE GREEN RED YELLOW
@@ -2728,7 +2729,11 @@ if (( NODEPS || (NOBUILD && !DEP_BIN ) )); then
 	if (( NODEPS )); then
 		warning "$(gettext "Skipping dependency checks.")"
 	fi
-elif type -p "${PACMAN%% *}" >/dev/null; then
+elif output="$(command -v "$PACMAN")"; then
+	# Save full path to Pacman in case the --syncdeps operation modifies
+	# the $PATH and makes it inaccessible
+	PACMAN="$output"
+	
 	if (( RMDEPS && ! INSTALL )); then
 		original_pkglist=($(run_pacman -Qq))    # required by remove_dep
 	fi
@@ -2757,7 +2762,7 @@ elif type -p "${PACMAN%% *}" >/dev/null; then
 		exit 1
 	fi
 else
-	warning "$(gettext "%s was not found in %s; skipping dependency checks.")" "${PACMAN%% *}" "PATH"
+	warning "$(gettext "%s was not found in %s; skipping dependency checks.")" "$PACMAN" "PATH"
 fi
 
 # ensure we have a sane umask set
