@@ -873,9 +873,9 @@ source_has_signatures() {
 run_pacman() {
 	local cmd
 	if [[ ! $1 = -@(T|Qq) ]]; then
-		cmd=("$PACMAN" $PACMAN_OPTS "$@")
+		cmd=($PACMAN $PACMAN_OPTS "$@")
 	else
-		cmd=("$PACMAN" "$@")
+		cmd=($PACMAN "$@")
 	fi
 	if (( ! ASROOT )) && [[ ! $1 = -@(T|Qq) ]]; then
 		if type -p sudo >/dev/null; then
